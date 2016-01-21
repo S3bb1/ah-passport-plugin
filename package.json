@@ -29,7 +29,8 @@
   "main": "./ah-passport-plugin.js",
   "dependencies":
   {
-    "passport":"^0.2"
+    "passport":"latest",
+    "passport-github":"latest"
   },
   "devDependencies":
   {
@@ -54,7 +55,6 @@
   },
   "scripts":
   {
-    "postinstall": "./scripts/NPMPostInstallScript.sh",
     "test": "./node_modules/.bin/mocha ./test --timeout 30000"
   }
 }

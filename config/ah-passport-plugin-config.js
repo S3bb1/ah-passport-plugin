@@ -16,53 +16,18 @@ exports["default"]=
 					pluginSubObjectName:"Strategy",
 					strategyConfig:
 					{
-						clientID: "your-github-client-id",
-						clientSecret: "your-github-client-secret",
+						clientID: "***",
+						clientSecret: "***",
 						scope:["public_repo"],
-						callbackURL: "https://your.callback.url"
-					},
-					StrategyVerifyFunction:function verifyFn(accessToken, refreshToken, profile, done)
-					{
-						var err=null;
-						var user=profile; 
-
-					// TODO: Tidy this if poss
-						if(typeof(done)==="function")
-						{
-							return done(err, user);
-						}
-						else
-						{
-							return false;
-						}
+						callbackURL: "http://localhost:8080/api/ah-passport-plugin/github/callback"
 					},
 
 					// TODO: Decide if it's worthwhile having this param
 					useBuiltinSessions:true
 				}
 			},
-			serialiseUser:function(user, done)
-			{
-				if(typeof(done)==="function")
-				{
-					return done(null, user);
-				}
-				else
-				{
-					return false;
-				}
-			},
-			deserialiseUser:function(obj, done)
-			{
-				if(typeof(done)==="function")
-				{
-					return done(null, obj);
-				}
-				else
-				{
-					return false;
-				}
-			}
+			userIdExpire : 1000, // 1 second
+			cachePrefix: 'users:'
 		};
 	}
 };

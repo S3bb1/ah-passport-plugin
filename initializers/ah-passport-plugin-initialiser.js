@@ -12,10 +12,35 @@ module.exports=
 		{
 			api.log("ah-passport-plugin initialiser: Found config object!", "debug");
 
-			// Reference: https://gist.github.com/joshbirk/1732068
-
 			// Set up the passport main object
 			api.AHPassportPlugin=require("passport");
+			api.AHPassportPlugin.actionHeroinitialize = function(passport) {
+	  
+			  return function initialize(req, res, next) {
+			    req._passport = {};
+			    req._passport.instance = passport;
+			    if (req.session && req.session[passport._key]) {
+			      // load data from existing session
+			      req._passport.session = req.session[passport._key];
+			    }
+
+			    next();
+			  };
+			};
+			api.AHPassportPlugin.serializeUser(function(user, done) {
+				console.log("Save USER" + user);
+				api.cache.save(user.id, user, function(){
+					done(null, user.id);
+				});
+			  
+			});
+			api.AHPassportPlugin.deserializeUser(function(id, done) {
+				console.log("Load USER" + id);
+			  api.cache.load(id, function(err, data){
+			  	console.log("Loaded USER" + data);
+			  	done(err, data);
+			  });
+			});
 			api.log("ah-passport-plugin initialiser: passport 'require' done", "debug");
 
 			var s;
@@ -36,29 +61,50 @@ module.exports=
 					R=R[conf.pluginSubObjectName];
 					api.log("ah-passport-plugin initialiser: passport strategy sub-object name is %s", "debug", conf.pluginSubObjectName);
 				}
-
+				console.dir(conf);
 				// Pull out the config and verification functions for this strategy
 				var c=conf.strategyConfig || {};
-				var v=conf.StrategyVerifyFunction || {};
+				var v=function verifyFn(accessToken, refreshToken, params, profile, verified)
+					{
+		            var user = {};
+		              user.accessToken = accessToken;
+		              user.provider = profile.provider;
+		              user.refreshToken = refreshToken;
+		              user.params = params;
+		              user.profile = profile;
+								if(typeof(verified)==="function")
+								{
+									return verified(null, user);
+								}
+								else
+								{
+									return false;
+								}
+					};
 
 				api.AHPassportPlugin.use(new R(c,v));
 			}
-
-		// Adapted from https://groups.google.com/forum/#!msg/actionhero-js/1OQiN_7Gpmw/jVLwKD2F_1MJ
 			var AHPassportPluginMiddleware=function(data, next)
-			{
-				api.AHPassportPlugin.initialize()(data.connection.rawConnection.req, data.connection.rawConnection.res, function ()
-				{
-					api.AHPassportPlugin.session()(data.connection.rawConnection.req, data.connection.rawConnection.res, function ()
-					{
-						return next();
+			{	
+				if(data.actionTemplate.needsAuthenticationWith){
+					api.cache.load(api.config.AHPassportPlugin.cachePrefix + data.connection.fingerprint, function(err, user){
+						console.dir(arguments);
+						if(user && user[data.actionTemplate.needsAuthenticationWith]){
+							data.user = {};
+							data.user[data.actionTemplate.needsAuthenticationWith] = user[data.actionTemplate.needsAuthenticationWith];
+							next();
+						} else {
+							next({message: "Not Authenticated with: "+data.actionTemplate.needsAuthenticationWith, authProvider: data.actionTemplate.needsAuthenticationWith});
+						}
 					});
-				});
+				} else {
+					next();
+				}
 			};
 
 			var middleware=
 			{
-				name: 'passport plugin',
+				name: 'ah_passport',
 				global: true,
 				priority: 10,
 				preProcessor: AHPassportPluginMiddleware
