@@ -31,36 +31,3 @@ exports["default"]=
 		};
 	}
 };
-
-exports.production=
-{
-	AHPassportPlugin: function(api)
-	{
-		return {
-			
-		};
-	}
-};
-
-exports.uat=
-{
-	AHPassportPlugin: function(api)
-	{
-		return {
-			
-		};
-	}
-};
-
-exports.development=
-{
-	AHPassportPlugin: function(api)
-	{
-		return {
-			
-		};
-	}
-};
-
-
-
